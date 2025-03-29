@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "PORT=3000 nodemon src/index.ts",
-    "build": "tsc",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc --project tsconfig.json",
     "test": "jest --passWithNoTests",
     "lint": "eslint . --ext .ts",
     "secrets:create": "node scripts/aws-secrets-manager.js create",
