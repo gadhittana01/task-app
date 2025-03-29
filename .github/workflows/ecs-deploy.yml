@@ -36,6 +36,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify TypeScript setup
+        run: |
+          echo "Node version: $(node --version)"
+          echo "TypeScript version: $(npx tsc --version)"
+          echo "tsconfig.json:"
+          cat tsconfig.json
+
+      - name: Build TypeScript locally to verify
+        run: |
+          npm run build
+          echo "Checking build output:"
+          ls -la dist/
+          if [ ! -f "dist/index.js" ]; then
+            echo "Error: dist/index.js not found after build!"
+            exit 1
+          fi
+
       - name: Run tests
         run: npm test
 
@@ -128,4 +145,3 @@ jobs:
         if: success()
         run: |
           echo "Deployment completed successfully"
-          # Add notification commands here if needed (e.g., Slack, email) 
