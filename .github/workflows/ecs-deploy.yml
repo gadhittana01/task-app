@@ -3,9 +3,25 @@ name: Deploy to ECS Fargate
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      confirmation:
+        description: 'Confirm deployment'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   build_and_deploy:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.confirmation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,6 +38,10 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Lint code
+        run: npm run lint
+        continue-on-error: true # Continue even if linting fails
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
