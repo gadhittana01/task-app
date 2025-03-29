@@ -43,6 +43,13 @@ jobs:
       #   run: |
       #     # Run ESLint with --max-warnings flag to allow warnings but fail on errors
       #     npx eslint . --ext .ts --max-warnings=9999
+
+      - name: Set AWS region
+        id: set-region
+        run: |
+          REGION="${{ github.event.inputs.region || secrets.AWS_REGION }}"
+          echo "AWS_REGION=${REGION}" >> $GITHUB_ENV
+          echo "Using AWS Region: ${REGION}"
         
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
