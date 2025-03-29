@@ -1,0 +1,105 @@
+name: Deploy to ECS Fargate
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      confirmation:
+        description: 'Confirm deployment'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  build_and_deploy:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.confirmation == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Retrieve secrets and create .env file
+        run: |
+          # Use Secret ARN from GitHub Secrets
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          SECRET_ARN="${{ secrets.AWS_SECRET_ARN }}"
+          
+          echo "Retrieving secrets from ARN: $SECRET_ARN..."
+          SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id $SECRET_ARN --query SecretString --output text)
+          
+          if [[ $SECRET_VALUE == {* ]]; then
+            echo "Converting JSON secrets to .env format..."
+            echo "$SECRET_VALUE" | jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' > .env
+          else
+            echo "$SECRET_VALUE" > .env
+          fi
+          
+          echo "Created .env file with $(wc -l < .env) variables"
+          
+          echo "Checking for required variables..."
+          for VAR in "MONGODB_URI" "JWT_SECRET" "NODE_ENV"; do
+            if ! grep -q "^$VAR=" .env; then
+              echo "::warning::Required variable $VAR not found in secrets"
+            fi
+          done
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} \
+          --query taskDefinition > task-definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ secrets.ECS_CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE_NAME }}
+          cluster: ${{ secrets.ECS_CLUSTER_NAME }}
+          wait-for-service-stability: true
+
+      - name: Notify deployment completion
+        if: success()
+        run: |
+          echo "Deployment completed successfully"
+          # Add notification commands here if needed (e.g., Slack, email) 

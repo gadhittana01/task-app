@@ -9,6 +9,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
+# Copy .env file first for build-time environment variables if they're needed
+COPY .env* ./
+
 # Copy source code
 COPY . .
 
@@ -26,14 +29,19 @@ COPY package*.json ./
 # Install production dependencies only
 RUN npm ci --only=production
 
+# Copy the .env file for runtime environment variables
+COPY .env* ./
+
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/@openapi-docs ./node_modules/@openapi-docs
 
 # Set environment variables
 ENV NODE_ENV=production
+ENV PORT=3000
 
 # Expose port
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "start"] 
+CMD ["node", "dist/index.js"] 

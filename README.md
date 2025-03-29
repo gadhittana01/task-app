@@ -12,7 +12,8 @@ A robust task management API built with TypeScript, Express.js, MongoDB, and Red
 - Task comments and notifications
 - Redis caching for improved performance
 - Rate limiting and input validation
-- AWS Lambda and API Gateway deployment
+- AWS integration with SNS/SQS for event handling
+- CI/CD pipeline with GitHub Actions and AWS Secrets Manager
 
 ## Prerequisites
 
@@ -31,7 +32,6 @@ PORT=3000
 
 # AWS Configuration
 AWS_REGION=us-east-1
-SECRET_NAME=task-app-secrets
 
 # JWT Configuration
 JWT_SECRET=your-jwt-secret-key
@@ -42,6 +42,15 @@ JWT_REFRESH_EXPIRES_IN=7d
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
+
+# MongoDB and Redis
+MONGODB_URI=your-mongodb-connection-string
+REDIS_URL=your-redis-connection-string
+
+# SNS/SQS
+SNS_TASK_LOGGING_TOPIC=arn:aws:sns:region:account:topic
+SNS_USER_NOTIFICATIONS_TOPIC=arn:aws:sns:region:account:topic
+SQS_QUEUE_URL=https://sqs.region.amazonaws.com/account/queue
 ```
 
 ## Installation
@@ -90,27 +99,58 @@ npm start
 - `POST /auth/refresh` - Refresh access token
 - `POST /auth/logout` - Logout user
 
-## Docker Deployment
+## CI/CD Pipeline
 
-Build the Docker image:
+This project uses GitHub Actions for CI/CD with AWS Secrets Manager integration. The pipeline:
+
+1. Runs tests on every push and pull request
+2. Builds the application on pushes to main
+3. Retrieves secrets from AWS Secrets Manager
+4. Packages and deploys to the configured server using SSH
+5. Restarts the application using PM2
+
+### Setting Up CI/CD
+
+To set up the CI/CD pipeline:
+
+1. Create secrets in AWS Secrets Manager
+2. Configure GitHub Secrets with AWS credentials and deployment details
+3. Push to main branch to trigger deployment
+
+For detailed instructions, see [docs/CICD-SETUP.md](docs/CICD-SETUP.md).
+
+### AWS Secrets Management
+
+The application includes scripts to help manage AWS Secrets:
+
 ```bash
-docker build -t task-app .
+# Create a new secret
+npm run secrets:create task-app-production .env.production
+
+# Update an existing secret
+npm run secrets:update task-app-production .env.production
+
+# Retrieve a secret
+npm run secrets:get task-app-production .env
 ```
 
-Run the container:
+## Server Deployment
+
+The application is configured to be deployed on a Linux server with PM2:
+
 ```bash
-docker run -p 3000:3000 task-app
+# Install PM2 globally
+npm install -g pm2
+
+# Start the application with PM2
+pm2 start ecosystem.config.js
+
+# View logs
+pm2 logs task-app
+
+# Restart the application
+pm2 restart task-app
 ```
-
-## AWS Deployment
-
-The application is configured to be deployed on AWS Lambda with API Gateway. The CI/CD pipeline will automatically:
-
-1. Build and test the application
-2. Create a Docker image
-3. Push the image to Amazon ECR
-4. Update the Lambda function
-5. Update the API Gateway configuration
 
 ## Contributing
 
@@ -122,4 +162,4 @@ The application is configured to be deployed on AWS Lambda with API Gateway. The
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -12,6 +12,11 @@ build/
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+.env.test
+.env.staging
+.env.retrieved
 
 # IDE and editor files
 .idea/
@@ -35,4 +40,10 @@ temp/
 .docker/
 
 # AWS
-.aws/ 
+.aws/
+aws-exports.js
+.amplify/
+
+# Deployment files
+deploy/
+deploy.tar.gz 
