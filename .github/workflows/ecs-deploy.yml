@@ -103,12 +103,26 @@ jobs:
           
           echo "Created .env file with $(wc -l < .env) variables"
           
-          echo "Checking for required variables..."
-          for VAR in "MONGODB_URI" "JWT_SECRET" "NODE_ENV"; do
+          # Verify key environment variables
+          echo "Verifying required environment variables..."
+          missing_vars=()
+          
+          for VAR in "MONGODB_URI" "REDIS_URL" "JWT_SECRET" "NODE_ENV"; do
             if ! grep -q "^$VAR=" .env; then
+              missing_vars+=("$VAR")
               echo "::warning::Required variable $VAR not found in secrets"
             fi
           done
+          
+          if [ ${#missing_vars[@]} -gt 0 ]; then
+            echo "::error::Missing required environment variables: ${missing_vars[*]}"
+            exit 1
+          fi
+          
+          # Print environment variables (masked)
+          echo "Environment variables in .env (sensitive values hidden):"
+          cat .env | grep -v -E "PASSWORD|SECRET|KEY|TOKEN|URI" | sed 's/=.*/=****/'
+          echo "Connection strings detected: $(grep -c URI .env)"
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -129,6 +143,10 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+          secret: |
+            "env_file=.env"
 
       - name: Download task definition
         run: |
