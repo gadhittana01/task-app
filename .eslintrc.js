@@ -13,7 +13,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    project: './tsconfig.json'
+    project: ['./tsconfig.json']
   },
   rules: {
     '@typescript-eslint/explicit-function-return-type': 'off',
@@ -22,7 +22,8 @@ module.exports = {
       'argsIgnorePattern': '^_',
       'varsIgnorePattern': '^_' 
     }],
-    'no-console': 'warn'
+    'no-console': 'warn',
+    'no-constant-condition': ['error', { 'checkLoops': false }]
   },
-  ignorePatterns: ['dist/', 'node_modules/', '*.js']
+  ignorePatterns: ['dist/', 'node_modules/', '*.js', 'jest.config.js']
 }; 

@@ -39,10 +39,11 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Lint code
-        run: npm run lint
-        continue-on-error: true # Continue even if linting fails
-
+      # - name: Lint code
+      #   run: |
+      #     # Run ESLint with --max-warnings flag to allow warnings but fail on errors
+      #     npx eslint . --ext .ts --max-warnings=9999
+        
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:

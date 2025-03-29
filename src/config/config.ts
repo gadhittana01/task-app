@@ -80,7 +80,7 @@ class ConfigManager {
     if (mongoUri.includes('mongodb+srv://') && !mongoUri.includes('mongodb+srv://user:pass@host/dbname')) {
       if (!mongoUri.includes('/?')) {
         mongoUri += '/task-app';
-      } else if (!mongoUri.match(/\/[^\/]+\?/)) {
+      } else if (!mongoUri.match(/\/[^/]+\?/)) {
         mongoUri = mongoUri.replace('/?', '/task-app?');
       }
     }

@@ -220,6 +220,7 @@ const startConsumer = async (queueUrl: string): Promise<void> => {
   console.log(`Starting queue consumer...`);
   console.log(`QUEUE CONSUMER: Using queue URL: ${queueUrl}`);
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
       console.log(`QUEUE CONSUMER: Polling for messages...`);
