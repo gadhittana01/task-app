@@ -34,7 +34,6 @@ COPY .env* ./
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/@openapi-docs ./node_modules/@openapi-docs
 
 # Set environment variables
 ENV NODE_ENV=production
