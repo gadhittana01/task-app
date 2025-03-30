@@ -2,6 +2,12 @@
 
 A task management API built with TypeScript, Express.js, MongoDB, and Redis. This application is deployed to AWS ECS Fargate with environment variables stored in AWS Parameter Store.
 
+## Architecture
+
+The application follows a modern microservices architecture deployed on AWS infrastructure. The diagram below illustrates the deployment architecture of the Task Management API.
+
+![Task App Architecture](assets/images/task-diagram.png)
+
 ## Features
 
 - JWT-based authentication with refresh tokens
