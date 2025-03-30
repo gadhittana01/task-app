@@ -4,21 +4,28 @@ on:
   push:
     branches: [main]
 
+# This workflow handles the complete CI/CD pipeline for deploying our application to AWS ECS Fargate
+# The process includes building, testing, containerizing, and deploying the application
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
+      # SECTION: Setup and Build
       - name: Checkout code
         uses: actions/checkout@v3
+        # This checks out the latest code from the repository
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
           cache: 'npm'
+        # This sets up the Node.js environment with caching to speed up dependency installation
 
       - name: Install dependencies
         run: npm ci
+        # Uses clean install to ensure consistent dependency versions
 
       - name: Verify TypeScript setup
         run: |
@@ -28,6 +35,7 @@ jobs:
           cat tsconfig.json
           echo "Directory structure:"
           find src -type f | sort
+        # Verifies the TypeScript environment is correctly configured
 
       - name: Build TypeScript locally to verify
         run: |
@@ -46,30 +54,32 @@ jobs:
             npx tsc --noEmit
             exit 1
           fi
+        # Compiles TypeScript code and verifies the build output
 
       - name: Run tests
         run: npm test
+        # Runs the test suite to ensure code quality
 
-      # - name: Lint code
-      #   run: |
-      #     # Run ESLint with --max-warnings flag to allow warnings but fail on errors
-      #     npx eslint . --ext .ts --max-warnings=9999
-        
+      # SECTION: AWS Authentication and ECR Setup
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+        # Sets up AWS credentials for ECR, ECS, and other AWS service interactions
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
         with:
           mask-password: true
+        # Authenticates with Amazon ECR to allow pushing Docker images
 
+      # SECTION: Docker Build and Push
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        # Sets up the Docker build environment with optimizations
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
@@ -81,11 +91,15 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+        # Builds the Docker image from our Dockerfile and pushes it to ECR
+        # Tags the image with both the commit SHA and 'latest' for version control
 
+      # SECTION: ECS Deployment
       - name: Download task definition
         run: |
           aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} \
           --query taskDefinition > task-definition.json
+        # Retrieves the current ECS task definition to be updated
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
@@ -94,6 +108,7 @@ jobs:
           task-definition: task-definition.json
           container-name: ${{ secrets.ECS_CONTAINER_NAME }}
           image: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}
+        # Updates the task definition with our new Docker image
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
@@ -102,8 +117,12 @@ jobs:
           service: ${{ secrets.ECS_SERVICE_NAME }}
           cluster: ${{ secrets.ECS_CLUSTER_NAME }}
           wait-for-service-stability: true
+        # Deploys the updated task definition to our ECS service
+        # Waits for the service to stabilize, ensuring a successful deployment
 
       - name: Notify deployment completion
         if: success()
         run: |
           echo "Deployment completed successfully"
+        # Confirms successful deployment
+        # This could be extended to send notifications via Slack, email, etc.
