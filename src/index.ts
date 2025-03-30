@@ -15,7 +15,7 @@ app.use(express.json());
 
 app.get('/health', (_req, res) => {
   res.json({ 
-    status: 'ok', 
+    status: 'ok',  
     timestamp: new Date().toISOString(),
     db: database.getMongoClient()?.readyState === 1 ? 'connected' : 'disconnected'
   });
