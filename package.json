@@ -13,11 +13,16 @@
     "secrets:create": "node scripts/aws-secrets-manager.js create",
     "secrets:update": "node scripts/aws-secrets-manager.js update",
     "secrets:get": "node scripts/aws-secrets-manager.js get",
+    "params:upload": "node scripts/aws-param-store.js upload",
+    "params:download": "node scripts/aws-param-store.js download",
+    "params:list": "node scripts/aws-param-store.js list",
+    "params:delete": "node scripts/aws-param-store.js delete",
     "deployment:test": "node scripts/deployment-test.js"
   },
   "dependencies": {
     "@aws-sdk/client-sns": "^3.777.0",
     "@aws-sdk/client-sqs": "^3.777.0",
+    "@aws-sdk/client-ssm": "^3.777.0",
     "@types/aws-sdk": "^0.0.42",
     "@types/redis": "^4.0.10",
     "aws-sdk": "^2.1692.0",

@@ -70,13 +70,6 @@ jobs:
       #   run: |
       #     # Run ESLint with --max-warnings flag to allow warnings but fail on errors
       #     npx eslint . --ext .ts --max-warnings=9999
-
-      - name: Set AWS region
-        id: set-region
-        run: |
-          REGION="${{ github.event.inputs.region || secrets.AWS_REGION }}"
-          echo "AWS_REGION=${REGION}" >> $GITHUB_ENV
-          echo "Using AWS Region: ${REGION}"
         
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -84,45 +77,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Retrieve secrets and create .env file
-        run: |
-          # Use Secret ARN from GitHub Secrets
-          ENV="${{ github.event.inputs.environment || 'production' }}"
-          SECRET_ARN="${{ secrets.AWS_SECRET_ARN }}"
-          
-          echo "Retrieving secrets from ARN: $SECRET_ARN..."
-          SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id $SECRET_ARN --query SecretString --output text)
-          
-          if [[ $SECRET_VALUE == {* ]]; then
-            echo "Converting JSON secrets to .env format..."
-            echo "$SECRET_VALUE" | jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | .[]' > .env
-          else
-            echo "$SECRET_VALUE" > .env
-          fi
-          
-          echo "Created .env file with $(wc -l < .env) variables"
-          
-          # Verify key environment variables
-          echo "Verifying required environment variables..."
-          missing_vars=()
-          
-          for VAR in "MONGODB_URI" "REDIS_URL" "JWT_SECRET" "NODE_ENV"; do
-            if ! grep -q "^$VAR=" .env; then
-              missing_vars+=("$VAR")
-              echo "::warning::Required variable $VAR not found in secrets"
-            fi
-          done
-          
-          if [ ${#missing_vars[@]} -gt 0 ]; then
-            echo "::error::Missing required environment variables: ${missing_vars[*]}"
-            exit 1
-          fi
-          
-          # Print environment variables (masked)
-          echo "Environment variables in .env (sensitive values hidden):"
-          cat .env | grep -v -E "PASSWORD|SECRET|KEY|TOKEN|URI" | sed 's/=.*/=****/'
-          echo "Connection strings detected: $(grep -c URI .env)"
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -143,10 +97,6 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            NODE_ENV=production
-          secret: |
-            "env_file=.env"
 
       - name: Download task definition
         run: |

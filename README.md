@@ -163,3 +163,105 @@ pm2 restart task-app
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+# Task App ECS Deployment Guide
+
+## Overview
+
+This repository contains a Node.js application deployed to AWS ECS Fargate with environment variables stored in AWS Parameter Store.
+
+## Environment Setup
+
+### AWS Parameter Store
+
+All environment variables are stored in AWS Parameter Store with the path prefix `/task-app/production/`.
+
+To upload environment variables:
+```bash
+# Run the parameter store script
+node scripts/aws-param-store.js upload --env-file .env
+```
+
+To download environment variables:
+```bash
+# Retrieve all parameters
+node scripts/aws-param-store.js download
+```
+
+### IAM Permissions
+
+The following roles and policies are required:
+
+1. **ECS Execution Role** (`ecsTaskExecutionRole`)
+   - Needs access to Parameter Store
+   - Attach the `TaskAppParameterStoreAccess-ECS` policy
+
+2. **ECS Task Role** (`task-app-ecs-task-role`)
+   - Needs access to AWS services used by the application
+   - Required policies:
+     - `TaskAppParameterStoreAccess-ECS` - For Parameter Store access
+     - `TaskAppSQSAccess` - For SQS operations
+     - `AmazonDynamoDBFullAccess` - For DynamoDB access
+
+### Deployment
+
+The application is deployed using:
+1. ECR for container images
+2. ECS Fargate for container orchestration
+3. Parameter Store for secure environment variables
+
+## Troubleshooting
+
+### Diagnostic Scripts
+
+Run the diagnostic scripts to verify the setup:
+
+```bash
+# Check Parameter Store access
+./scripts/test-param-store-access.sh
+
+# Verify deployment
+./scripts/verify-ecs-deployment.sh
+```
+
+### Common Issues
+
+1. **Missing Environment Variables**: Ensure all required parameters exist in Parameter Store with the correct prefix
+2. **IAM Permissions**: Verify both the execution role and task role have the necessary permissions 
+3. **Connection Issues**: Check that the application can connect to MongoDB and Redis
+
+### Logs
+
+View application logs in CloudWatch:
+
+```bash
+aws logs get-log-events --log-group-name /ecs/task-app --log-stream-name <log-stream-name>
+```
+
+## Maintenance
+
+### Updating Environment Variables
+
+1. Update the local `.env` file
+2. Upload to Parameter Store:
+   ```bash
+   node scripts/aws-param-store.js upload --env-file .env
+   ```
+3. Force a new deployment:
+   ```bash
+   aws ecs update-service --cluster task-app-cluster --service task-app-service --force-new-deployment
+   ```
+
+### Adding New AWS Resources
+
+When adding new AWS resources:
+1. Create a policy document (JSON)
+2. Create the policy using AWS CLI:
+   ```bash
+   aws iam create-policy --policy-name <PolicyName> --policy-document file://<policy-file.json>
+   ```
+3. Attach the policy to the task role:
+   ```bash
+   aws iam attach-role-policy --role-name task-app-ecs-task-role --policy-arn <policy-arn>
+   ```
+4. Force a new deployment

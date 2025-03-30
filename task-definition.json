@@ -1,9 +1,9 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:us-east-1:941646819734:task-definition/task-app:11",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:941646819734:task-definition/task-app:22",
     "containerDefinitions": [
         {
             "name": "task-app",
-            "image": "941646819734.dkr.ecr.us-east-1.amazonaws.com/task-app:ba56e56bea3066082cd1e3edc6bf2d979b7fbe85",
+            "image": "941646819734.dkr.ecr.us-east-1.amazonaws.com/task-app:latest",
             "cpu": 0,
             "portMappings": [
                 {
@@ -13,87 +13,88 @@
                 }
             ],
             "essential": true,
-            "environment": [],
-            "secrets": [
+            "environment": [
                 {
                     "name": "PORT",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/PORT"
+                    "value": "3000"
                 },
                 {
                     "name": "NODE_ENV",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/NODE_ENV"
-                },
-                {
-                    "name": "AWS_REGION",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/AWS_REGION"
-                },
-                {
-                    "name": "RATE_LIMIT_WINDOW_MS",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/RATE_LIMIT_WINDOW_MS"
-                },
-                {
-                    "name": "RATE_LIMIT_MAX_REQUESTS",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/RATE_LIMIT_MAX_REQUESTS"
-                },
-                {
-                    "name": "SNS_TASK_LOGGING_TOPIC",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/SNS_TASK_LOGGING_TOPIC"
-                },
-                {
-                    "name": "SNS_USER_NOTIFICATIONS_TOPIC",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/SNS_USER_NOTIFICATIONS_TOPIC"
-                },
-                {
-                    "name": "SQS_QUEUE_URL",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/SQS_QUEUE_URL"
-                },
-                {
-                    "name": "EMAIL_HOST",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/EMAIL_HOST"
-                },
-                {
-                    "name": "EMAIL_PORT",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/EMAIL_PORT"
-                },
-                {
-                    "name": "EMAIL_FROM",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/EMAIL_FROM"
-                },
-                {
-                    "name": "JWT_SECRET",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/JWT_SECRET"
-                },
-                {
-                    "name": "JWT_REFRESH_SECRET",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/JWT_REFRESH_SECRET"
-                },
-                {
-                    "name": "JWT_EXPIRES_IN",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/JWT_EXPIRES_IN"
-                },
-                {
-                    "name": "JWT_REFRESH_EXPIRES_IN",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/JWT_REFRESH_EXPIRES_IN"
-                },
-                {
-                    "name": "MONGODB_URI",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/MONGODB_URI"
-                },
-                {
-                    "name": "REDIS_URL",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/REDIS_URL"
-                },
-                {
-                    "name": "EMAIL_USER",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/EMAIL_USER"
-                },
-                {
-                    "name": "EMAIL_PASS",
-                    "valueFrom": "arn:aws:ssm:us-east-1:941646819734:parameter/task-app-production/EMAIL_PASS"
+                    "value": "production"
                 }
             ],
             "mountPoints": [],
             "volumesFrom": [],
+            "secrets": [
+                {
+                    "name": "MONGODB_URI",
+                    "valueFrom": "/task-app/production/MONGODB_URI"
+                },
+                {
+                    "name": "REDIS_URL",
+                    "valueFrom": "/task-app/production/REDIS_URL"
+                },
+                {
+                    "name": "JWT_SECRET",
+                    "valueFrom": "/task-app/production/JWT_SECRET"
+                },
+                {
+                    "name": "JWT_REFRESH_SECRET",
+                    "valueFrom": "/task-app/production/JWT_REFRESH_SECRET"
+                },
+                {
+                    "name": "JWT_EXPIRES_IN",
+                    "valueFrom": "/task-app/production/JWT_EXPIRES_IN"
+                },
+                {
+                    "name": "JWT_REFRESH_EXPIRES_IN",
+                    "valueFrom": "/task-app/production/JWT_REFRESH_EXPIRES_IN"
+                },
+                {
+                    "name": "AWS_REGION",
+                    "valueFrom": "/task-app/production/AWS_REGION"
+                },
+                {
+                    "name": "RATE_LIMIT_WINDOW_MS",
+                    "valueFrom": "/task-app/production/RATE_LIMIT_WINDOW_MS"
+                },
+                {
+                    "name": "RATE_LIMIT_MAX_REQUESTS",
+                    "valueFrom": "/task-app/production/RATE_LIMIT_MAX_REQUESTS"
+                },
+                {
+                    "name": "SNS_TASK_LOGGING_TOPIC",
+                    "valueFrom": "/task-app/production/SNS_TASK_LOGGING_TOPIC"
+                },
+                {
+                    "name": "SNS_USER_NOTIFICATIONS_TOPIC",
+                    "valueFrom": "/task-app/production/SNS_USER_NOTIFICATIONS_TOPIC"
+                },
+                {
+                    "name": "SQS_QUEUE_URL",
+                    "valueFrom": "/task-app/production/SQS_QUEUE_URL"
+                },
+                {
+                    "name": "EMAIL_HOST",
+                    "valueFrom": "/task-app/production/EMAIL_HOST"
+                },
+                {
+                    "name": "EMAIL_PORT",
+                    "valueFrom": "/task-app/production/EMAIL_PORT"
+                },
+                {
+                    "name": "EMAIL_USER",
+                    "valueFrom": "/task-app/production/EMAIL_USER"
+                },
+                {
+                    "name": "EMAIL_PASS",
+                    "valueFrom": "/task-app/production/EMAIL_PASS"
+                },
+                {
+                    "name": "EMAIL_FROM",
+                    "valueFrom": "/task-app/production/EMAIL_FROM"
+                }
+            ],
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
@@ -109,7 +110,7 @@
     "taskRoleArn": "arn:aws:iam::941646819734:role/task-app-ecs-task-role",
     "executionRoleArn": "arn:aws:iam::941646819734:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 11,
+    "revision": 22,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
@@ -132,6 +133,9 @@
             "name": "ecs.capability.execution-role-ecr-pull"
         },
         {
+            "name": "ecs.capability.secrets.ssm.environment-variables"
+        },
+        {
             "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
         },
         {
@@ -148,7 +152,7 @@
     ],
     "cpu": "512",
     "memory": "1024",
-    "registeredAt": "2025-03-29T15:36:01.394Z",
-    "registeredBy": "arn:aws:iam::941646819734:user/github-actions-task-app",
+    "registeredAt": "2025-03-30T03:37:20.065Z",
+    "registeredBy": "arn:aws:iam::941646819734:root",
     "tags": []
 }
